@@ -5,7 +5,7 @@ param (
 $results = @()
 
 # Define the output CSV file path
-$csvPath = "C:\Users\JB7711t1\Desktop\LogResult.csv"
+$csvPath = ""
 
 # Remove the old file if it exists, so headers are written fresh
 if (Test-Path $csvPath) {
