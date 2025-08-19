@@ -4,6 +4,14 @@ param (
 
 $results = @()
 
+# Define the output CSV file path
+$csvPath = "C:\Users\JB7711t1\Desktop\LogResult.csv"
+
+# Remove the old file if it exists, so headers are written fresh
+if (Test-Path $csvPath) {
+    Remove-Item $csvPath -Force
+}
+
 Write-Host "`n--- Servervise resultater ---`n"
 
 foreach ($server in $ServerNames) {
@@ -93,6 +101,13 @@ foreach ($server in $ServerNames) {
     Write-Host ""
 
     $results += $result
+
+    # Save current result line to CSV (append after first write)
+    if ((Get-Item $csvPath -ErrorAction SilentlyContinue) -eq $null) {
+        $result | Export-Csv -Path $csvPath -NoTypeInformation
+    } else {
+        $result | Export-Csv -Path $csvPath -NoTypeInformation -Append
+    }
 }
 
 # Fælles summering
