@@ -1,0 +1,42 @@
+function Format-FileSize {
+    param([long]$bytes)
+    if     ($bytes -ge 1TB) { "{0:N1} TB" -f ($bytes / 1TB) }
+    elseif ($bytes -ge 1GB) { "{0:N1} GB" -f ($bytes / 1GB) }
+    elseif ($bytes -ge 1MB) { "{0:N1} MB" -f ($bytes / 1MB) }
+    elseif ($bytes -ge 1KB) { "{0:N1} KB" -f ($bytes / 1KB) }
+    else                    { "$bytes B" }
+}
+
+$drive    = "V:\"
+$excludes = @('#recycle', '@eaDir', 'Log')
+
+Write-Host "Gennemsoeger: $drive"
+Write-Host ("----------------------------------------" + "-" * 20)
+Write-Host ("{0,-10} {1,8}  {2}" -f "Størrelse", "Filer", "Mappe")
+Write-Host ("----------------------------------------" + "-" * 20)
+
+$results = @()
+
+Get-ChildItem -Path $drive -Directory | Where-Object {
+    $excludes -notcontains $_.Name
+} | ForEach-Object {
+    $files = Get-ChildItem -Path $_.FullName -Recurse -File -ErrorAction SilentlyContinue
+    $size  = ($files | Measure-Object -Property Length -Sum).Sum
+    $count = ($files | Measure-Object).Count
+
+    $results += [PSCustomObject]@{
+        Path  = $_.FullName
+        Bytes = if ($null -eq $size) { 0 } else { $size }
+        Files = $count
+    }
+}
+
+$results | Sort-Object Path | ForEach-Object {
+    Write-Host ("{0,-10} {1,8}  {2}" -f (Format-FileSize $_.Bytes), $_.Files, $_.Path)
+}
+
+$totalBytes = ($results | Measure-Object -Property Bytes -Sum).Sum
+$totalFiles = ($results | Measure-Object -Property Files -Sum).Sum
+
+Write-Host ("----------------------------------------" + "-" * 20)
+Write-Host ("{0,-10} {1,8}  Total  $drive" -f (Format-FileSize $totalBytes), $totalFiles)
